@@ -1,0 +1,12 @@
+{
+  "name": "timezone-line-bot",
+  "version": "0.0.0",
+  "description": "A line bot that converts timezones",
+  "main": "server.js",
+  "repository": "",
+  "author": "",
+  "dependencies": {
+    "async": "~0.2.8",
+    "dotenv": "^6.0.0"
+  }
+}
