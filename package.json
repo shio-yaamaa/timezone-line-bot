@@ -7,6 +7,8 @@
   "author": "",
   "dependencies": {
     "async": "~0.2.8",
-    "dotenv": "^6.0.0"
+    "chrono-node": "^1.3.5",
+    "dotenv": "^6.0.0",
+    "moment-timezone": "^0.5.17"
   }
 }
