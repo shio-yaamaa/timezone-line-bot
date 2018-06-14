@@ -5,7 +5,9 @@ const moment = require('moment-timezone');
 const chrono = require('chrono-node');
 
 const TIME_STRING_MAX_LENGTH = '0000/00/00 00:00:00am - 0000/00/00 00:00:00am'.length;
-const TIME_FORMAT = 'YYYY/M/D H:mm';
+const TIME_FORMAT_FULL = 'YYYY/M/D H:mm';
+const TIME_FORMAT_FROM_MONTH = 'M/D H:mm';
+const TIME_FORMAT_FROM_HOUR = 'H:mm';
 const TIMEZONE_LIST_URL = 'https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List';
 const TABLE_NAME = 'TimezoneLineBot';
 
@@ -178,7 +180,7 @@ const sendTimezoneList = (sendReplyAndReponse, chatroomData) => {
 const sendCurrentTime = (sendReplyAndReponse, chatroomData) => {
   if (chatroomData && chatroomData.Timezones.length > 0) { // The chatroom exists and there is at least one timezone
     sendReplyAndReponse(chatroomData.Timezones.map(timezoneObject => {
-      return timezoneObject.timezone + ' ' + moment.tz(timezoneObject.timezone).format(TIME_FORMAT);
+      return timezoneObject.timezone + ' ' + moment.tz(timezoneObject.timezone).format(TIME_FORMAT_FULL);
     }).join('\n'));
   } else {
     sendReplyAndReponse('No timezone in this chatroom');
@@ -385,11 +387,22 @@ const parseTime = (chatroomData, receivedText) => {
 };
 
 const parsedResultToTimezoneText = (parsedResult, sourceTimezone, targetTimezone) => {
-  const startString = moment.tz(chronoToString(parsedResult.start), 'YYYY-M-D H:m', sourceTimezone).tz(targetTimezone).format(TIME_FORMAT);
+  const currentTime = moment.tz(targetTimezone);
+  
+  const startTime = moment.tz(chronoToString(parsedResult.start), 'YYYY-M-D H:m', sourceTimezone).tz(targetTimezone);
+  const startString = startTime.format(startTime.year() != currentTime.year()
+    ? TIME_FORMAT_FULL
+    : (startTime.dayOfYear() != currentTime.dayOfYear() ? TIME_FORMAT_FROM_MONTH : TIME_FORMAT_FROM_HOUR)
+  );
+  
   if (parsedResult.end) {
-    const endString = moment.tz(chronoToString(parsedResult.end), 'YYYY-M-D H:m', sourceTimezone).tz(targetTimezone).format(TIME_FORMAT);
-    // TODO: Delete redundant information in endString
-    return `${targetTimezone} ${startString} - ${endString}`;
+    const endTime = moment.tz(chronoToString(parsedResult.end), 'YYYY-M-D H:m', sourceTimezone).tz(targetTimezone);
+    const endString = endTime.format(endTime.year() != startTime.year()
+      ? TIME_FORMAT_FULL
+      : (endTime.dayOfYear() != startTime.dayOfYear() ? TIME_FORMAT_FROM_MONTH : TIME_FORMAT_FROM_HOUR)
+    );
+    
+    return `${targetTimezone} ${startString}-${endString}`;
   } else {
     return `${targetTimezone} ${startString}`;
   }

@@ -4,10 +4,7 @@
 
 # Todo
 
-- Create icon
-- Delete redundant information in end string
 - Suggest the correct timezone name if there is a typo
-- Whitelist the IP address?
 - When the location information is sent, return the official timezone name of that location
 
 # DB Structure
