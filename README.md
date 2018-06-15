@@ -2,7 +2,7 @@
 
 A Line bot that converts time in one time zone to that of other time zones.
 
-It enables group members from different time zones to arrange their schedules quickly.
+It calculates time differences so that group members in different time zones can schedule events quickly.
 
 <img src="assets/timezone_linebot_demo.png" width="500px" />
 
