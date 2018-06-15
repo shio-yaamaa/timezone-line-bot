@@ -65,7 +65,7 @@ exports.handler = function (event, context) {
     : (chatroomType === 'group' ? body.events[0].source.groupId : body.events[0].source.roomId);
   getChatroomFromDB(chatroomId, chatroomType, (error, data) => {
     if (error) {
-      sendReplyAndReponse('Error retrieving your chatroom data');
+      sendReplyAndReponse('チャットルームデータの取得でエラーが発生しました');
     } else {
       reply(sendReplyAndReponse, chatroomId, chatroomType, data.Item, body.events[0].message.text);
     }
@@ -155,25 +155,25 @@ const reply = (sendReplyAndReponse, chatroomId, chatroomType, chatroomData, rece
 };
 
 const sendCommandList = sendReplyAndReponse => {
-  sendReplyAndReponse('timezone all: Send the link to the list of all the timezones\n\n'
-    + 'timezone list: Show the list of timezones registered in this chatroom\n\n'
-    + 'timezone now: Show the current time in all the timezones registered in this chatroom\n\n'
-    + 'timezone add Asia/Tokyo as jst: Add the timezone Asia/Tokyo to this chatroom\'s timezones with the alias "jst"\n\n'
-    + 'timezone delete Asia/Tokyo: Delete the timezone Asia/Tokyo from this chatroom\'s timezones\n\n'
-    + 'Put the alias of the timezone before the time to convert it to that of other timezones');
+  sendReplyAndReponse('timezone all: 全てのタイムゾーン名のリストへのリンクを送ります\n\n'
+    + 'timezone list: このチャットルームで登録されたタイムゾーンの一覧を表示します\n\n'
+    + 'timezone now: このチャットルームに登録されたタイムゾーンでの現在時刻を表示します\n\n'
+    + 'timezone add Asia/Tokyo as jst: Asia/Tokyoというタイムゾーンを「jst」という通称で登録します\n\n'
+    + 'timezone delete Asia/Tokyo: Asia/Tokyoというタイムゾーンをこのチャットルームから削除します\n\n'
+    + '「jst 8pm」というように時間の前にタイムゾーンの通称をつけると、このチャットルームで登録された他のタイムゾーンに変換します');
 };
 
 const sendAllTimezones = sendReplyAndReponse => {
-  sendReplyAndReponse(`Link to the timezones list: ${TIMEZONE_LIST_URL}`);
+  sendReplyAndReponse(`全てのタイムゾーン名のリストです\n${TIMEZONE_LIST_URL}`);
 };
 
 const sendTimezoneList = (sendReplyAndReponse, chatroomData) => {
   if (chatroomData && chatroomData.Timezones.length > 0) { // The chatroom exists and there is at least one timezone
     sendReplyAndReponse(chatroomData.Timezones.map(timezoneObject => {
-      return `timezone: ${timezoneObject.timezone}\nalias: ${timezoneObject.alias}`;
+      return `タイムゾーン: ${timezoneObject.timezone}\n通称: ${timezoneObject.alias}`;
     }).join('\n\n'));
   } else {
-    sendReplyAndReponse('No timezone in this chatroom');
+    sendReplyAndReponse('このチャットルームにはまだタイムゾーンが登録されていません');
   }
 };
 
@@ -183,7 +183,7 @@ const sendCurrentTime = (sendReplyAndReponse, chatroomData) => {
       return timezoneObject.timezone + ' ' + moment.tz(timezoneObject.timezone).format(TIME_FORMAT_FULL);
     }).join('\n'));
   } else {
-    sendReplyAndReponse('No timezone in this chatroom');
+    sendReplyAndReponse('このチャットルームにはまだタイムゾーンが登録されていません');
   }
 };
 
@@ -217,9 +217,9 @@ const addTimezone = (sendReplyAndReponse, chatroomId, chatroomType, chatroomData
       docClient.update(updateParams, (error, data) => {
         if (error) {
           console.log(error);
-          sendReplyAndReponse('Error updating the timezone');
+          sendReplyAndReponse('タイムゾーンの更新でエラーが発生しました');
         } else {
-          sendReplyAndReponse(`The timezone ${timezone} has been added with the alias "${alias ? alias : timezone}"`);
+          sendReplyAndReponse(`${timezone}というタイムゾーンが「${alias ? alias : timezone}」という通称で登録されました`);
         }
       });
     } else { // The chatroom doesn't exist in the DB
@@ -234,14 +234,25 @@ const addTimezone = (sendReplyAndReponse, chatroomId, chatroomType, chatroomData
       docClient.put(chatroomPutParams, (error, data) => {
         if (error) {
           console.log(error);
-          sendReplyAndReponse('Error adding your chatroom to the DB');
+          sendReplyAndReponse('このチャットルームの登録でエラーが発生しました');
         } else {
-          sendReplyAndReponse(`The timezone ${timezone} has been added with the alias "${alias}"`);
+          sendReplyAndReponse(`${timezone}というタイムゾーンが「${alias ? alias : timezone}」という通称で登録されました`);
         }
       });
     }
   } else {
-    sendReplyAndReponse('No such timezone');
+    const normalizedTimezone = timezone.toLowerCase().replace(' ', '').replace('_', '').replace('/', '');
+    const suggestion = moment.tz.names().reduce((accumulator, currentTimezone) => {
+      if (!accumulator) {
+        const normalizedCurrentTimezone = currentTimezone.toLowerCase().replace(' ', '').replace('_', '').replace('/', '');
+        if (normalizedCurrentTimezone.indexOf(normalizedTimezone) >= 0) {
+          return currentTimezone;
+        }
+      } else {
+        return accumulator;
+      }
+    }, null);
+    sendReplyAndReponse('そのような名前のタイムゾーンはありません' + (suggestion ? `\nもしかして: ${suggestion}` : ''));
   }
 };
 
@@ -271,16 +282,16 @@ const deleteTimezone = (sendReplyAndReponse, chatroomData, timezone) => {
       docClient.update(updateParams, (error, data) => {
         if (error) {
           console.log(error);
-          sendReplyAndReponse('Error deleting the timezone');
+          sendReplyAndReponse('タイムゾーンの削除でエラーが発生しました');
         } else {
-          sendReplyAndReponse(`The timezone ${timezone} has been deleted`);
+          sendReplyAndReponse(`${timezone}が削除されました`);
         }
       });
       return;
     }
   }
   // Either the chatroom or the timezone doesn't exist in the DB
-  sendReplyAndReponse('No such timezone in this chatroom');
+  sendReplyAndReponse('このチャットルームにはそのような名前のタイムゾーンは登録されていません');
 };
 
 // timezones: value of the Timezones attribute of the chatroom data
