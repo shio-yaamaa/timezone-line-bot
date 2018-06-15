@@ -6,13 +6,13 @@ It enables group members from different time zones to arrange their schedules qu
 
 <img src="assets/timezone_linebot_demo.png" width="500px" />
 
-<img src="assets/assets/timezone_linebot_usage.png" width="500px" />
+<img src="assets/timezone_linebot_usage.png" width="500px" />
 
 ## Add TimezoneConverter to your friends
 
 Scan the QR code below:
 
-<img src="assets/assets/timezone_linebot_qr.png" width="200px" />
+<img src="assets/timezone_linebot_qr.png" width="200px" />
 
 or jump to the following link:
 

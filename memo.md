@@ -4,9 +4,7 @@
 
 # Todo
 
-- Translate messages to Japanese
-- Suggestion and Japanese translation is not reflected to the code on Cloud9
-- Suggest the correct timezone name if there is a typo
+- Suggestion and Japanese translation are not reflected to the code on Cloud9
 - When the location information is sent, return the official timezone name of that location
 
 # DB Structure
