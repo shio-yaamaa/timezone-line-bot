@@ -25,17 +25,17 @@ moment.tz.setDefault('UTC');
 
 http.createServer((request, response) => {
   parseRequestBody(request, body => {
-    
+
     // Validate the request header
     if (!validateSignature((request.headers || {})['x-line-signature'], body)) {
       return;
     }
-    
+
     // Proceed only when the message type is text
     if (body.events[0].type != 'message' || body.events[0].message.type != 'text') {
       return;
     }
-    
+
     // Prepare for reply and response
     const replyToken = body.events[0].replyToken;
     const sendReplyAndReponse = replyText => {
@@ -44,7 +44,7 @@ http.createServer((request, response) => {
           type: 'text',
           text: replyText
         };
-        
+
         // Send back the reply message
         const client = new line.Client({channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN});
         client.replyMessage(replyToken, replyMessage)
@@ -61,7 +61,7 @@ http.createServer((request, response) => {
           });
       }
     };
-    
+
     // Process the message
     const chatroomType = body.events[0].source.type;
     const chatroomId = chatroomType === 'user'
@@ -150,7 +150,7 @@ const reply = (sendReplyAndReponse, chatroomId, chatroomType, chatroomData, rece
         break;
     }
   }
-  
+
   // Timezone conversion
   const parsedReceivedText = parseTime(chatroomData, receivedText);
   if (parsedReceivedText.some(element => element.type === 'time')) { // If parsedReceivedText contains time
@@ -332,7 +332,7 @@ const aliasToTimezone = (alias, timezones) => {
 // ];
 const parseTime = (chatroomData, receivedText) => {
   const parsedElements = [];
-  
+
   // Look for alias in the text
   const aliasRegExp = new RegExp(`(${chatroomData.Timezones.map(timezoneObject => {
     return escapeRegExp(timezoneObject.alias);
@@ -348,7 +348,7 @@ const parseTime = (chatroomData, receivedText) => {
     	});
     	regExpOffset = aliasMatches[aliasMatches.length - 1].index + matchString.length;
     }
-    
+
     // Add the text before the first alias to the elements list
     if (aliasMatches[0].index > 0) {
       parsedElements.push({
@@ -356,7 +356,7 @@ const parseTime = (chatroomData, receivedText) => {
         text: receivedText.substring(0, aliasMatches[0].index)
       });
     }
-  
+
     // Parse individual time
     for (let i = 0; i < aliasMatches.length; i++) {
       const aliasMatch = aliasMatches[i];
@@ -365,7 +365,7 @@ const parseTime = (chatroomData, receivedText) => {
         (i < aliasMatches.length - 1) ? aliasMatches[i + 1].index : receivedText.length
       );
       const textBetweenToParse = textBetween.substr(0, TIME_STRING_MAX_LENGTH);
-      
+
       const timezone = aliasToTimezone(aliasMatch.alias, chatroomData.Timezones);
       const referenceDate = moment.tz(timezone);
       const parsedResults = chrono.parse(textBetweenToParse, new Date(
@@ -408,20 +408,20 @@ const parseTime = (chatroomData, receivedText) => {
 
 const parsedResultToTimezoneText = (parsedResult, sourceTimezone, targetTimezone) => {
   const currentTime = moment.tz(targetTimezone);
-  
+
   const startTime = moment.tz(chronoToString(parsedResult.start), 'YYYY-M-D H:m', sourceTimezone).tz(targetTimezone);
   const startString = startTime.format(startTime.year() != currentTime.year()
     ? TIME_FORMAT_FULL
     : (startTime.dayOfYear() != currentTime.dayOfYear() ? TIME_FORMAT_FROM_MONTH : TIME_FORMAT_FROM_HOUR)
   );
-  
+
   if (parsedResult.end) {
     const endTime = moment.tz(chronoToString(parsedResult.end), 'YYYY-M-D H:m', sourceTimezone).tz(targetTimezone);
     const endString = endTime.format(endTime.year() != startTime.year()
       ? TIME_FORMAT_FULL
       : (endTime.dayOfYear() != startTime.dayOfYear() ? TIME_FORMAT_FROM_MONTH : TIME_FORMAT_FROM_HOUR)
     );
-    
+
     return `${targetTimezone} ${startString}-${endString}`;
   } else {
     return `${targetTimezone} ${startString}`;
